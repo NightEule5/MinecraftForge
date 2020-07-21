@@ -19,44 +19,25 @@
 
 package net.minecraftforge.fml.relauncher.libraries;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.security.CodeSource;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.versions.mcp.MCPVersion;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
-
-import net.minecraftforge.versions.forge.ForgeVersion;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.security.CodeSource;
+import java.util.*;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class LibraryManager
 {
@@ -67,7 +48,7 @@ public class LibraryManager
     private static final String LIBRARY_DIRECTORY_OVERRIDE = System.getProperty("forge.lib_folder", null);
     private static final List<String> skipContainedDeps = Arrays.asList(System.getProperty("fml.skipContainedDeps","").split(",")); //TODO: Is this used by anyone in the real world? TODO: Remove in 1.13.
     private static final FilenameFilter MOD_FILENAME_FILTER  = (dir, name) -> name.endsWith(".jar") || name.endsWith(".zip"); //TODO: Disable support for zip in 1.13
-    private static final Comparator<File> FILE_NAME_SORTER_INSENSITVE = (o1, o2) -> o1.getName().toLowerCase(Locale.ENGLISH).compareTo(o2.getName().toLowerCase(Locale.ENGLISH));
+    private static final Comparator<File> FILE_NAME_SORTER_INSENSITIVE = (o1, o2) -> o1.getName().toLowerCase(Locale.ENGLISH).compareTo(o2.getName().toLowerCase(Locale.ENGLISH));
 
     public static final Attributes.Name MODSIDE = new Attributes.Name("ModSide");
     private static final Attributes.Name MODCONTAINSDEPS = new Attributes.Name("ContainedDeps");
@@ -443,7 +424,7 @@ public class LibraryManager
         return merged;
     }
 
-    public static List<File> gatherLegacyCanidates(File mcDir)
+    public static List<File> gatherLegacyCandidates(File mcDir)
     {
         List<File> list = new ArrayList<>();
 
@@ -493,7 +474,7 @@ public class LibraryManager
         if (!ENABLE_AUTO_MOD_MOVEMENT && memory != null && memory.getRepository() != null)
             memory.getRepository().filterLegacy(list);
 
-        list.sort(FILE_NAME_SORTER_INSENSITVE);
+        list.sort(FILE_NAME_SORTER_INSENSITIVE);
         return list;
     }
 
