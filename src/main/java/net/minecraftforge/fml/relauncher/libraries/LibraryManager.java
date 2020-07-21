@@ -39,6 +39,7 @@ import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+@SuppressWarnings("UnstableApiUsage")
 public class LibraryManager
 {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -87,9 +88,8 @@ public class LibraryManager
             Repository repo = list.getRepository() == null ? libraries_dir : list.getRepository();
             List<Artifact> artifacts = list.getArtifacts();
             // extractPacked adds artifacts to the list. As such, we can't use an Iterator to traverse it.
-            for (int i = 0; i < artifacts.size(); i++)
+            for (Artifact artifact : artifacts)
             {
-                Artifact artifact = artifacts.get(i);
                 Artifact resolved = repo.resolve(artifact);
                 if (resolved != null)
                 {
@@ -180,10 +180,9 @@ public class LibraryManager
             LOGGER.debug("File already proccessed {}, Skipping", file.getAbsolutePath());
             return null;
         }
-        JarFile jar = null;
-        try
+
+        try (JarFile jar = new JarFile(file))
         {
-            jar = new JarFile(file);
             LOGGER.debug("Examining file: {}", file.getName());
             processed.add(file);
             return extractPacked(jar, modlist, modDirs);
@@ -192,15 +191,10 @@ public class LibraryManager
         {
             LOGGER.error("Unable to read the jar file {} - ignoring", file.getName(), ioe);
         }
-        finally
-        {
-            try {
-                if (jar != null)
-                    jar.close();
-            } catch (IOException e) {}
-        }
+
         return null;
     }
+
     private static Pair<Artifact, byte[]> extractPacked(JarFile jar, ModList modlist, File... modDirs) throws IOException
     {
         Attributes attrs;
@@ -392,7 +386,7 @@ public class LibraryManager
     private static byte[] readAll(InputStream in) throws IOException
     {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int read = -1;
+        int read;
         byte[] data = new byte[1024 * 16];
 
         while ((read = in.read(data, 0, data.length)) != -1)
@@ -428,7 +422,6 @@ public class LibraryManager
     {
         List<File> list = new ArrayList<>();
 
-        @SuppressWarnings("unchecked")
         Map<String,String> args = Collections.emptyMap(); // TODO Launch args - do we need this? (Map<String, String>)Launcher.INSTANCE.blackboard().get("launchArgs");
         String extraMods = args.get("--mods");
         if (extraMods != null)
